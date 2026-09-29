@@ -26,7 +26,7 @@ export const Layout = () => {
                     <input type="text" name="search" id="search" placeholder="Search" />
                 </form>
                 <div>
-                    <h2>Follow koch bratan</h2>
+                    <h2>Follow</h2>
                 </div>
             </aside>
         </Wrapper>

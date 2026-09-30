@@ -6,7 +6,7 @@ export const Wrapper = styled.main`
     max-width: 1440px;
     margin: 0 auto;
     justify-content: space-between;
-    /* align-items: center; */
+    align-items: center;
 `
 
 export const SideHeader = styled.header`

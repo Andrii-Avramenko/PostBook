@@ -49,3 +49,34 @@ export const checkAcc = () => {
       throw new Error(err);
     });
 };
+
+export const createPost = (content) => {
+  return axios
+    .post(
+      `${baseURL}/posts`,
+      {
+        body: content,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
+    )
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error(err);
+    });
+};
+
+export const like = (postId) => {
+  return axios.post(
+    `${baseURL}/like`,
+    { postId },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    },
+  );
+};

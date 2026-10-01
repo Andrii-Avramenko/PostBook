@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Wrapper,
   LoginForm,
-  ColorOverlay,
+  Background,
   Input,
   SubmitBtn,
 } from "./Login.styled";
@@ -32,29 +32,30 @@ export const Login = () => {
   };
 
   return (
-    <Wrapper>
-      <ColorOverlay />
-      <LoginForm action="" onSubmit={handleSubmit}>
-        <h2>Log in</h2>
-        <Input
-          type="text"
-          id="ident"
-          value={identifier}
-          onChange={(e) => setIdent(e.target.value)}
-          placeholder="Username or email"
-        />
-        <Input
-          type="pass"
-          id="pass"
-          value={password}
-          onChange={(e) => setPass(e.target.value)}
-          placeholder="Password"
-        />
-        <p>
-          New? <Link to="/register">Sign Up instead</Link>
-        </p>
-        <SubmitBtn type="submit">Submit</SubmitBtn>
-      </LoginForm>
-    </Wrapper>
+    <Background>
+      <Wrapper>
+        <LoginForm action="" onSubmit={handleSubmit}>
+          <h2>Log in</h2>
+          <Input
+            type="text"
+            id="ident"
+            value={identifier}
+            onChange={(e) => setIdent(e.target.value)}
+            placeholder="Username or email"
+          />
+          <Input
+            type="pass"
+            id="pass"
+            value={password}
+            onChange={(e) => setPass(e.target.value)}
+            placeholder="Password"
+          />
+          <p>
+            New? <Link to="/register">Sign Up instead</Link>
+          </p>
+          <SubmitBtn type="submit">Submit</SubmitBtn>
+        </LoginForm>
+      </Wrapper>
+    </Background>
   );
 };

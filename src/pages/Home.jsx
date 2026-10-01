@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Post from '../components/Post/Post'
 import { getFeed } from "../service/api";
 
 export const Home = () => {
@@ -17,10 +18,7 @@ export const Home = () => {
     <>
       <ul>
         {feed.map((post) => (
-          <li>
-            <p>@{post.author.username}</p>
-            <p>{post.body}</p>
-          </li>
+          <Post key={post.id} content={post}/>
         ))}
       </ul>
     </>

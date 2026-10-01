@@ -36,7 +36,7 @@ export const Layout = () => {
         <h2>PostBook</h2>
         <ul>
           <li>
-            <NavLink>Home</NavLink>
+            <NavLink to="/">Home</NavLink>
           </li>
           <li>
             <NavLink>Search</NavLink>
@@ -46,7 +46,7 @@ export const Layout = () => {
           </li>
         </ul>
         {loggedIn ? (
-          <button type="button">Make a post</button>
+          <button type="button" onClick={() => navigate("/newpost")}>Make a post</button>
         ) : (
           <button type="button" onClick={() => navigate("/login")}>
             Login

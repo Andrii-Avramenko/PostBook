@@ -1,9 +1,8 @@
 import styled from "styled-components";
 
-export const Wrapper = styled.div`
-  display: flex;
-  justify-content: right;
-  align-items: center;
+export const Background = styled.div`
+  width: 100vw;
+  height: 100vh;
   width: 100vw;
   height: 100vh;
   background-image: url("https://images.unsplash.com/photo-1635094550905-c91409133300?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
@@ -11,21 +10,22 @@ export const Wrapper = styled.div`
   background-position-y: center;
 `;
 
-export const ColorOverlay = styled.div`
-  width: 100%;
-  height: 100vh;
-  background-color: ${({ theme }) => theme.colors.accent};
-  opacity: 0.5;
+export const Wrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${({ theme }) => theme.colors.accent + "80"};
 `;
 
 export const LoginForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: 30px;
-  padding: 0 50px;
+  padding: 0 100px;
   height: 100vh;
   justify-content: center;
   align-items: center;
+  border-right: 5px solid ${({ theme }) => theme.colors.accent};
   border-left: 5px solid ${({ theme }) => theme.colors.accent};
   background-color: #fff;
 `;

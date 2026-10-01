@@ -26,6 +26,18 @@ function requireAuth(req, res, next) {
   }
 }
 
+function optionalAuth(req, res, next) {
+  const [type, token] = (req.headers.authorization || "").split(" ");
+  if (type === "Bearer" && token) {
+    try {
+      req.user = jwt.verify(token, JWT_SECRET);
+    } catch {
+      // bad or expired token: treat as logged out
+    }
+  }
+  next();
+}
+
 const app = express();
 app.use(cors());
 const port = 3001;
@@ -112,8 +124,9 @@ app.post("/posts", requireAuth, (req, res) => {
 // follow a user
 app.post("/follow", requireAuth, (req, res) => {
   const { followeeId } = req.body;
-  db.prepare("INSERT OR IGNORE INTO follows (follower_id, followee_id) VALUES (?, ?)")
-    .run(req.user.id, followeeId);
+  db.prepare(
+    "INSERT OR IGNORE INTO follows (follower_id, followee_id) VALUES (?, ?)",
+  ).run(req.user.id, followeeId);
   res.sendStatus(204);
 });
 
@@ -139,20 +152,17 @@ app.post("/like", requireAuth, (req, res) => {
 
 // turns a flat row into { ...post, author: {...} }
 function withAuthor(row) {
-  const { author_id, username, bio, author_created_at, ...post } = row;
+  const { author_id, username, bio, author_created_at, liked, ...post } = row;
   return {
     ...post,
-    author: {
-      id: author_id,
-      username,
-      bio,
-      joined: author_created_at,
-    },
+    liked: Boolean(liked),
+    author: { id: author_id, username, bio, joined: author_created_at },
   };
 }
 
 // mixed feed: each page = 10 trending + 5 new, interleaved
-app.get("/posts", (req, res) => {
+app.get("/posts", optionalAuth, (req, res) => {
+  const viewerId = req.user?.id ?? 0;
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const TRENDING_PER_PAGE = 10;
   const NEW_PER_PAGE = 5;
@@ -160,19 +170,20 @@ app.get("/posts", (req, res) => {
   const candidates = db
     .prepare(
       `
-  SELECT p.id, p.body, p.created_at,
-    u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
-    (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
-    (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
-    (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
-  FROM posts p
-  JOIN users u ON u.id = p.user_id
-  WHERE p.reply_to IS NULL
-  ORDER BY p.id DESC
-  LIMIT 500
-`,
+    SELECT p.id, p.body, p.created_at,
+      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
+      (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.reply_to IS NULL
+    ORDER BY p.id DESC
+    LIMIT 500
+  `,
     )
-    .all()
+    .all(viewerId)
     .map(withAuthor);
 
   const score = (p) =>
@@ -225,25 +236,75 @@ app.get("/posts", (req, res) => {
 });
 
 // home timeline (cursor pagination via ?before=<post id>)
-app.get("/timeline/:userId", requireAuth, (req, res) => {
+app.get("/timeline", requireAuth, (req, res) => {
   const userId = req.user.id;
   const before = Number(req.query.before) || Number.MAX_SAFE_INTEGER;
+
   const rows = db
     .prepare(
       `
-  SELECT p.id, p.body, p.created_at,
-    u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at
-  FROM posts p
-  JOIN users u ON u.id = p.user_id
-  WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?)
-         OR p.user_id = ?)
-    AND p.id < ?
-  ORDER BY p.id DESC
-  LIMIT 20
-`,
+    SELECT p.id, p.body, p.created_at,
+      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?)
+           OR p.user_id = ?)
+      AND p.id < ?
+    ORDER BY p.id DESC
+    LIMIT 20
+  `,
     )
-    .all(userId, userId, before)
+    .all(userId, userId, userId, before)
     .map(withAuthor);
+
+  res.json(rows);
+});
+
+app.get("/users/:username", optionalAuth, (req, res) => {
+  const viewerId = req.user?.id ?? 0;
+  const user = db
+    .prepare(
+      `
+    SELECT u.id, u.username, u.bio, u.created_at AS joined,
+      (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id) AS followers,
+      (SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following,
+      (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id) AS posts,
+      EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = u.id) AS isFollowing
+    FROM users u
+    WHERE u.username = ?
+  `,
+    )
+    .get(viewerId, req.params.username);
+
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json({ ...user, isFollowing: Boolean(user.isFollowing) });
+});
+
+app.get("/users/:username/posts", optionalAuth, (req, res) => {
+  const viewerId = req.user?.id ?? 0;
+  const before = Number(req.query.before) || Number.MAX_SAFE_INTEGER;
+
+  const rows = db
+    .prepare(
+      `
+    SELECT p.id, p.body, p.created_at,
+      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE u.username = ? AND p.id < ?
+    ORDER BY p.id DESC
+    LIMIT 20
+  `,
+    )
+    .all(viewerId, req.params.username, before)
+    .map(withAuthor);
+
   res.json(rows);
 });
 

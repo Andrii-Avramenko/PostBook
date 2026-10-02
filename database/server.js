@@ -76,7 +76,7 @@ app.post("/register", async (req, res) => {
     }
     throw err;
   }
-  console.log(username, " has just signed up")
+  console.log(username, "has just signed up")
 });
 
 app.post("/login", async (req, res) => {
@@ -98,7 +98,7 @@ app.post("/login", async (req, res) => {
     token: signToken(user),
     user: { id: user.id, username: user.username, bio: user.bio },
   });
-  console.log(identifier, " has just logged in")
+  console.log(identifier, "has just logged in")
 });
 
 // who am I (useful on page load to check a saved token)

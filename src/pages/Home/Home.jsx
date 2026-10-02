@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import Post from '../components/Post/Post'
-import { getFeed } from "../service/api";
+import Post from '../../components/Post/Post'
+import { getFeed } from "../../service/api";
+import { StyledHome } from "./Home.styled";
 
 export const Home = () => {
   const [feed, setFeed] = useState([]);
@@ -15,12 +16,12 @@ export const Home = () => {
   }, []);
 
   return (
-    <>
+    <StyledHome>
       <ul>
         {feed.map((post) => (
           <Post key={post.id} content={post}/>
         ))}
       </ul>
-    </>
+    </StyledHome>
   );
 };

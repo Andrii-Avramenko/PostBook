@@ -53,7 +53,6 @@ app.use(function (req, res, next) {
 
 // register
 app.post("/register", async (req, res) => {
-  console.log(req.body);
   const { username, email, password, conpassword } = req.body;
   if (!username || !email || !password || !conpassword) {
     return res.status(400).json({ error: "Missing fields" });

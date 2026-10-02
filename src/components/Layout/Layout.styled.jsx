@@ -9,9 +9,3 @@ export const Wrapper = styled.main`
     align-items: center;
 `
 
-export const SideHeader = styled.header`
-    display: flex;
-    max-width: 240px;
-    flex-direction: column;
-    gap: 24px;
-`

@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom"
 import { Layout } from "./components/Layout/Layout"
-import { Home } from "./pages/Home"
+import { Home } from "./pages/Home/Home"
 import { Login } from "./pages/Login/Login"
 import { GlobalStyle } from "./components/GlobalStyle"
 import { Register } from "./pages/Login/Register"

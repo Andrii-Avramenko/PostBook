@@ -46,7 +46,9 @@ export const checkAcc = () => {
     })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      if (err.status === 401) console.log(`Bad token! Error ${err.status}, token is going to be cleared!`);
+      localStorage.removeItem('token')
+      throw new Error(err)
     });
 };
 

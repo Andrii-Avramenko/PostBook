@@ -1,17 +1,18 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { SideHeader, Wrapper } from "./Layout.styled";
+import { Outlet } from "react-router-dom";
+import { Wrapper } from "./Layout.styled";
+import SideBar from '../SideBar/SideBar'
 import { useEffect, useState } from "react";
 import { checkAcc } from "../../service/api";
 
 export const Layout = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function init() {
       setIsLoading(true);
       if (!localStorage.getItem("token")) {
+        setLoggedIn(false);
         setIsLoading(false);
         return;
       }
@@ -21,6 +22,7 @@ export const Layout = () => {
         setLoggedIn(true);
       } catch (err) {
         console.error(err);
+        setLoggedIn(false);
       } finally {
         setIsLoading(false);
       }
@@ -32,27 +34,7 @@ export const Layout = () => {
 
   return (
     <Wrapper>
-      <SideHeader>
-        <h2>PostBook</h2>
-        <ul>
-          <li>
-            <NavLink to="/">Home</NavLink>
-          </li>
-          <li>
-            <NavLink>Search</NavLink>
-          </li>
-          <li>
-            <NavLink>Profile</NavLink>
-          </li>
-        </ul>
-        {loggedIn ? (
-          <button type="button" onClick={() => navigate("/newpost")}>Make a post</button>
-        ) : (
-          <button type="button" onClick={() => navigate("/login")}>
-            Login
-          </button>
-        )}
-      </SideHeader>
+      <SideBar loggedIn={loggedIn} />
       <Outlet />
       <aside>
         <form action="get">

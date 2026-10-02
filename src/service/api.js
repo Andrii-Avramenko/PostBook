@@ -3,11 +3,40 @@ import axios from "axios";
 const baseURL = "http://localhost:3001";
 
 export const getFeed = () => {
+  const token = localStorage.getItem("token");
   return axios
-    .get(`${baseURL}/posts`)
+    .get(
+      `${baseURL}/posts`,
+      !token
+        ? {}
+        : {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+    )
     .then((res) => res.data)
     .catch((err) => {
       throw new Error(err);
+    });
+};
+
+export const getPostById = (id) => {
+  const token = localStorage.getItem("token");
+  return axios
+    .get(
+      `${baseURL}/posts/${id}`,
+      !token
+        ? {}
+        : {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+    )
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error();
     });
 };
 
@@ -46,9 +75,12 @@ export const checkAcc = () => {
     })
     .then((res) => res.data)
     .catch((err) => {
-      if (err.status === 401) console.log(`Bad token! Error ${err.status}, token is going to be cleared!`);
-      localStorage.removeItem('token')
-      throw new Error(err)
+      if (err.status === 401)
+        console.log(
+          `Bad token! Error ${err.status}, token is going to be cleared!`,
+        );
+      localStorage.removeItem("token");
+      throw new Error(err);
     });
 };
 

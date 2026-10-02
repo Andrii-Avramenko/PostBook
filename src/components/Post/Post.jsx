@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { like } from "../../service/api";
-import { StyledPost } from "./Post.styled";
-import { FaHeart } from "react-icons/fa";
+import { Bookmark, Interactions, LikeButton, StyledPost } from "./Post.styled";
+import { FiHeart, FiBookmark } from "react-icons/fi";
 
 const Post = ({ content }) => {
-  const { id, body, created_at, replies, author, source } = content;
+  const { age_hours, id, body, replies, author, source } = content;
+  console.log(content)
   const [likes, setLikes] = useState(content.likes);
   const [liked, setLiked] = useState(content.liked);
 
@@ -20,26 +21,37 @@ const Post = ({ content }) => {
     });
   };
 
+  const postTime = () => {
+    const age_minutes = age_hours * 60
+    const age_seconds = age_minutes * 60
+
+    if (age_seconds < 60) return `${Math.round(age_seconds)}s`
+    else if (age_minutes < 60) return `${Math.round(age_minutes)}m`
+    else return `${Math.round(age_hours)}h`
+  }
+
   return (
     <StyledPost>
       <div></div>
       <div>
         <p>@{author.username}</p>
-        <p>{Date.parse(created_at)}</p>
+        <p>{postTime()}</p>
         <button type="button">Follow</button>
       </div>
       <div>{body}</div>
-      <div>
-        <button
+      <Interactions>
+        <LikeButton
           type="button"
           className={liked ? "liked" : ""}
           onClick={handleLike}
         >
-          <FaHeart />
+          <FiHeart />
           {likes}
-        </button>
-        <button type="button">Save</button>
-      </div>
+        </LikeButton>
+        <Bookmark type="button">
+          <FiBookmark />0
+        </Bookmark>
+      </Interactions>
     </StyledPost>
   );
 };

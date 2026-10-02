@@ -12,6 +12,9 @@ const SideBar = ({ loggedIn }) => {
           <NavLink to="/">Home</NavLink>
         </li>
         <li>
+          <NavLink to="/">Following</NavLink>
+        </li>
+        <li>
           <NavLink>Search</NavLink>
         </li>
         <li>

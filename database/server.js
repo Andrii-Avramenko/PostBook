@@ -76,6 +76,7 @@ app.post("/register", async (req, res) => {
     }
     throw err;
   }
+  console.log(username, " has just signed up")
 });
 
 app.post("/login", async (req, res) => {
@@ -97,6 +98,7 @@ app.post("/login", async (req, res) => {
     token: signToken(user),
     user: { id: user.id, username: user.username, bio: user.bio },
   });
+  console.log(identifier, " has just logged in")
 });
 
 // who am I (useful on page load to check a saved token)
@@ -232,6 +234,32 @@ app.get("/posts", optionalAuth, (req, res) => {
     hasMore: used.size < candidates.length,
     posts,
   });
+});
+
+app.get("/posts/:id", optionalAuth, (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) {
+    return res.status(400).json({ error: "Invalid post id" });
+  }
+  const viewerId = req.user?.id ?? 0;
+
+  const row = db
+    .prepare(
+      `
+    SELECT p.id, p.body, p.created_at, p.reply_to,
+      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.id = ?
+  `,
+    )
+    .get(viewerId, postId);
+
+  if (!row) return res.status(404).json({ error: "Post not found" });
+  res.json(withAuthor(row));
 });
 
 // home timeline (cursor pagination via ?before=<post id>)

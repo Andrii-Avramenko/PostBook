@@ -104,13 +104,44 @@ export const createPost = (content) => {
 };
 
 export const like = (postId) => {
-  return axios.post(
-    `${baseURL}/like`,
-    { postId },
-    {
+  return axios
+    .post(
+      `${baseURL}/like`,
+      { postId },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
+    )
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error(err);
+    });
+};
+
+export const getUserById = (username) => {
+  return axios
+    .get(`${baseURL}/users/${username}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-    },
-  );
+    })
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error(err);
+    });
+};
+
+export const getUserPostsById = (username) => {
+  return axios
+    .get(`${baseURL}/users/${username}/posts`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error(err);
+    });
 };

@@ -36,14 +36,14 @@ export const Layout = () => {
     <Wrapper>
       <SideBar loggedIn={loggedIn} />
       <Outlet />
-      {/* <aside>
+      <aside>
         <form action="get">
           <input type="text" name="search" id="search" placeholder="Search" />
         </form>
         <div>
           <h2>Follow</h2>
         </div>
-      </aside> */}
+      </aside>
     </Wrapper>
   );
 };

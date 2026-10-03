@@ -38,6 +38,15 @@ function optionalAuth(req, res, next) {
   next();
 }
 
+const POST_COLUMNS = `
+  p.id, p.body, p.created_at, p.reply_to,
+  u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+  (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+  EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+  (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
+  (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
+`;
+
 const app = express();
 app.use(cors());
 const port = 3001;
@@ -76,7 +85,7 @@ app.post("/register", async (req, res) => {
     }
     throw err;
   }
-  console.log(username, "has just signed up")
+  console.log(username, "has just signed up");
 });
 
 app.post("/login", async (req, res) => {
@@ -98,7 +107,7 @@ app.post("/login", async (req, res) => {
     token: signToken(user),
     user: { id: user.id, username: user.username, bio: user.bio },
   });
-  console.log(identifier, "has just logged in")
+  console.log(identifier, "has just logged in");
 });
 
 // who am I (useful on page load to check a saved token)
@@ -171,12 +180,7 @@ app.get("/posts", optionalAuth, (req, res) => {
   const candidates = db
     .prepare(
       `
-    SELECT p.id, p.body, p.created_at,
-      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
-      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
-      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
-      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
-      (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
+    SELECT ${POST_COLUMNS}
     FROM posts p
     JOIN users u ON u.id = p.user_id
     WHERE p.reply_to IS NULL
@@ -246,11 +250,7 @@ app.get("/posts/:id", optionalAuth, (req, res) => {
   const row = db
     .prepare(
       `
-    SELECT p.id, p.body, p.created_at, p.reply_to,
-      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
-      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
-      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
-      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    SELECT ${POST_COLUMNS}
     FROM posts p
     JOIN users u ON u.id = p.user_id
     WHERE p.id = ?
@@ -270,11 +270,7 @@ app.get("/timeline", requireAuth, (req, res) => {
   const rows = db
     .prepare(
       `
-    SELECT p.id, p.body, p.created_at,
-      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
-      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
-      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
-      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    SELECT ${POST_COLUMNS}
     FROM posts p
     JOIN users u ON u.id = p.user_id
     WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?)
@@ -317,11 +313,7 @@ app.get("/users/:username/posts", optionalAuth, (req, res) => {
   const rows = db
     .prepare(
       `
-    SELECT p.id, p.body, p.created_at,
-      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
-      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
-      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
-      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies
+    SELECT ${POST_COLUMNS}
     FROM posts p
     JOIN users u ON u.id = p.user_id
     WHERE u.username = ? AND p.id < ?
@@ -330,7 +322,8 @@ app.get("/users/:username/posts", optionalAuth, (req, res) => {
   `,
     )
     .all(viewerId, req.params.username, before)
-    .map(withAuthor);
+    .map(withAuthor)
+    .map((p) => ({ ...p, source: "profile" }));
 
   res.json(rows);
 });

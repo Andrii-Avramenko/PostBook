@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { like } from "../../service/api";
-import { Bookmark, Interactions, LikeButton, StyledPost } from "./Post.styled";
+import { Button, Interactions, StyledPost } from "./Post.styled";
 import { FiHeart, FiBookmark } from "react-icons/fi";
 
 const Post = ({ content }) => {
   const { age_hours, id, body, replies, author, source } = content;
-  console.log(content)
   const [likes, setLikes] = useState(content.likes);
   const [liked, setLiked] = useState(content.liked);
 
@@ -35,22 +34,22 @@ const Post = ({ content }) => {
       <div></div>
       <div>
         <p>@{author.username}</p>
-        <p>{postTime()}</p>
+        <p>{postTime()} ago</p>
         <button type="button">Follow</button>
       </div>
       <div>{body}</div>
       <Interactions>
-        <LikeButton
+        <Button
           type="button"
           className={liked ? "liked" : ""}
           onClick={handleLike}
         >
           <FiHeart />
           {likes}
-        </LikeButton>
-        <Bookmark type="button">
+        </Button>
+        <Button type="button">
           <FiBookmark />0
-        </Bookmark>
+        </Button>
       </Interactions>
     </StyledPost>
   );

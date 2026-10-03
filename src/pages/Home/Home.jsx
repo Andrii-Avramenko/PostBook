@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Post from '../../components/Post/Post'
 import { getFeed } from "../../service/api";
-import { StyledHome } from "./Home.styled";
+import { Page, Posts, Selector, StyledHome } from "./Home.styled";
 
 export const Home = () => {
   const [feed, setFeed] = useState([]);
@@ -17,11 +17,15 @@ export const Home = () => {
 
   return (
     <StyledHome>
-      <ul>
+      <Selector>
+        <Page to='/'>For You</Page>
+        <Page to='/following'>Following</Page>
+      </Selector>
+      <Posts>
         {feed.map((post) => (
           <Post key={post.id} content={post}/>
         ))}
-      </ul>
+      </Posts>
     </StyledHome>
   );
 };

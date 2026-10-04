@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout/Layout";
 import { Home } from "./pages/Home/Home";
 import { Login } from "./pages/Login/Login";
@@ -7,6 +7,7 @@ import { Register } from "./pages/Login/Register";
 import MakePost from "./pages/MakePost/MakePost";
 import { ProfileOrPost } from "./components/ProfileOrPost";
 import { Following } from "./pages/Home/Following";
+import { NotFound } from "./pages/NotFound/NotFound";
 
 function App() {
   return (
@@ -17,10 +18,14 @@ function App() {
           <Route path="/following" element={<Following />} />
           <Route path="/:id" element={<ProfileOrPost />} />
           <Route path="/newpost" element={<MakePost />} />
-          <Route path="*" element={<p>error</p>} />
+          <Route
+            path="*"
+            element={<Navigate to="/error" state={{ code: 404 }} />}
+          />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/error" element={<NotFound />} />
       </Routes>
       <GlobalStyle />
     </>

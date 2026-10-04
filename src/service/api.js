@@ -10,6 +10,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const pingServer = () =>
+  api
+    .get("/health")
+    .then(() => true)
+    .catch((err) => {
+      if (err.response) return true;
+      return false;
+    });
+
 export const getFeed = (page = 1) => {
   return api
     .get(`/posts`, {
@@ -37,7 +46,7 @@ export const getPostById = (id) => {
     .get(`/posts/${id}`)
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error();
+      throw err;
     });
 };
 

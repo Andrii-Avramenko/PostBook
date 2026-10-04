@@ -60,6 +60,8 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.get("/health", (req, res) => res.json({ ok: true }));
+
 // register
 app.post("/register", async (req, res) => {
   const { username, email, password, conpassword } = req.body;

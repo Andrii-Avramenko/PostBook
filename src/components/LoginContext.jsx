@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useState } from "react";
-import { checkAcc } from "../service/api";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { checkAcc, pingServer } from "../service/api";
 
 const LoginContext = createContext();
 
@@ -8,9 +8,20 @@ export const useLogin = () => useContext(LoginContext);
 export const LoginProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginHighlight, setLoginHighlight] = useState(false);
+  const [online, setOnline] = useState(true);
 
   const promptLogin = useCallback(() => setLoginHighlight(true), []);
   const clearLoginHighlight = useCallback(() => setLoginHighlight(false), []);
+
+  async function checkServer() {
+    const ok = await pingServer();
+    setOnline(ok);
+    return ok;
+  };
+
+  useEffect(() => {
+    checkServer()
+  }, [])
 
   async function checkLogin() {
     if (!localStorage.getItem("token")) {
@@ -22,8 +33,8 @@ export const LoginProvider = ({ children }) => {
       console.log(account);
       setLoggedIn(true);
     } catch (err) {
-      console.error(err);
       setLoggedIn(false);
+      throw err;
     } finally {
       return loggedIn;
     }
@@ -32,6 +43,7 @@ export const LoginProvider = ({ children }) => {
   return (
     <LoginContext.Provider
       value={{
+        online,
         loggedIn,
         loginHighlight,
         promptLogin,

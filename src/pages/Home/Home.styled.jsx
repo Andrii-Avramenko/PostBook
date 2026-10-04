@@ -3,8 +3,8 @@ import styled from "styled-components";
 
 export const StyledHome = styled.section`
   width: 100%;
-  border-right: 1px solid #00000080;
-  border-left: 1px solid #00000080;
+  border-right: 1px solid ${({theme}) => theme.colors.lines};
+  border-left: 1px solid ${({theme}) => theme.colors.lines};
 `;
 
 export const Selector = styled.div`

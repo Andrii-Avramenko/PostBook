@@ -1,49 +1,33 @@
 import { Outlet } from "react-router-dom";
-import { Content, Wrapper } from "./Layout.styled";
+import { Content, RightSidebar, Wrapper } from "./Layout.styled";
 import SideBar from "../SideBar/SideBar";
 import { useEffect, useState } from "react";
-import { checkAcc } from "../../service/api";
+import { useLogin } from "../LoginContext";
 
 export const Layout = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { checkLogin } = useLogin()
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    async function init() {
-      setIsLoading(true);
-      if (!localStorage.getItem("token")) {
-        setLoggedIn(false);
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const account = await checkAcc();
-        console.log(account);
-        setLoggedIn(true);
-      } catch (err) {
-        console.error(err);
-        setLoggedIn(false);
-      } finally {setIsLoading(false)}
-    }
-    init();
+    console.log(checkLogin())
   }, []);
 
   if (isLoading) return <p>Loading...</p>;
 
   return (
     <Wrapper>
-      <SideBar loggedIn={loggedIn} />
+      <SideBar />
       <Content>
         <Outlet />
       </Content>
-      <aside>
+      <RightSidebar>
         <form action="get">
           <input type="text" name="search" id="search" placeholder="Search" />
         </form>
         <div>
           <h2>Follow</h2>
         </div>
-      </aside>
+      </RightSidebar>
     </Wrapper>
   );
 };

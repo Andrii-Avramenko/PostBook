@@ -1,10 +1,13 @@
 import styled from "styled-components";
 
 export const Wrapper = styled.header`
-    display: flex;
-    width: 240px;
-    height: 100vh;
-    flex-direction: column;
-    flex-shrink: 0;
-    gap: 24px;
-`
+  position: sticky;
+  top: 0;
+  align-self: start;
+  width: 280px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+`;

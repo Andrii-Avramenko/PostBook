@@ -11,7 +11,8 @@ export const theme = {
     },
     colors: {
         accent: '#2B4FD8',
-        background: '#F7F6F3',
-
+        lines: '#E4E2DC',
+        contentBg: '#fff',
+        mainBg: '#F7F6F3',
     }
 }

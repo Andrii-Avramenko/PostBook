@@ -5,7 +5,7 @@ export const StyledPost = styled.li`
   max-width: 600px;
   padding: 20px;
   border: none;
-  border-bottom: 1px solid #00000080;
+  border-bottom: 1px solid ${({theme}) => theme.colors.lines};
 `;
 
 export const Interactions = styled.div`

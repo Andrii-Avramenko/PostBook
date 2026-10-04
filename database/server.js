@@ -276,6 +276,40 @@ app.get("/posts", optionalAuth, (req, res) => {
   });
 });
 
+app.get("/following", requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const before = Number(req.query.before) || Number.MAX_SAFE_INTEGER;
+
+  const rows = db
+    .prepare(
+      `
+    SELECT p.id, p.body, p.created_at,
+      u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+      (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+      EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?1) AS liked,
+      1 AS followed,
+      (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
+      (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?1)
+      AND p.reply_to IS NULL
+      AND p.id < ?2
+    ORDER BY p.id DESC
+    LIMIT 15
+  `,
+    )
+    .all(userId, before)
+    .map(withAuthor)
+    .map((p) => ({ ...p, source: "following" }));
+
+  res.json({
+    posts: rows,
+    hasMore: rows.length === 15,
+    nextBefore: rows.length ? rows[rows.length - 1].id : null,
+  });
+});
+
 app.get("/posts/:id", optionalAuth, (req, res) => {
   const postId = Number(req.params.id);
   if (!Number.isInteger(postId)) {
@@ -296,30 +330,6 @@ app.get("/posts/:id", optionalAuth, (req, res) => {
 
   if (!row) return res.status(404).json({ error: "Post not found" });
   res.json(withAuthor(row));
-});
-
-// home timeline (cursor pagination via ?before=<post id>)
-app.get("/timeline", requireAuth, (req, res) => {
-  const userId = req.user.id;
-  const before = Number(req.query.before) || Number.MAX_SAFE_INTEGER;
-
-  const rows = db
-    .prepare(
-      `
-    SELECT ${POST_COLUMNS}
-    FROM posts p
-    JOIN users u ON u.id = p.user_id
-    WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?)
-           OR p.user_id = ?)
-      AND p.id < ?
-    ORDER BY p.id DESC
-    LIMIT 20
-  `,
-    )
-    .all(userId, userId, userId, before)
-    .map(withAuthor);
-
-  res.json(rows);
 });
 
 app.get("/users/:username", optionalAuth, (req, res) => {

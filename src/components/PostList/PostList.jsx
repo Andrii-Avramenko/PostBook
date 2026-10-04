@@ -3,10 +3,12 @@ import Post from "../Post/Post";
 import {
   follow,
   getFeed,
+  getFollowing,
   getUserPostsById,
   like,
   save,
 } from "../../service/api";
+import { useLogin } from "../LoginContext";
 
 const actions = {
   like: {
@@ -33,32 +35,52 @@ const actions = {
 const PostList = ({ user, following }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextBefore, setNextBefore] = useState(null);
+
+  const { promptLogin, loggedIn } = useLogin();
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    if (!!user) {
-      getUserPostsById(user)
-        .then(setPosts)
-        .catch((err) => console.error(err))
-        .finally(() => setLoading(false));
-    } else if (following) {
-      console.log("following");
-      setLoading(false)
-    } else {
-      getFeed()
-        .then((res) => {
-          setPosts(res.posts);
-        })
-        .catch((err) => console.error(err))
-        .finally(() => setLoading(false));
-    }
+    setHasMore(false);
+    setNextBefore(null);
+
+    const request = user
+      ? getUserPostsById(user)
+      : following
+        ? getFollowing().then((res) => res.posts)
+        : getFeed().then((res) => res.posts);
+
+    request
+      .then((posts) => {
+        if (!cancelled) setPosts(posts);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(err);
+          setPosts([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, following]);
 
   const handleInteract = (e) => {
     const button = e.target.closest("[data-action]");
     if (!button) return;
 
-    const { action, post, user: authorId } = button.dataset
+    if (!loggedIn) {
+      promptLogin();
+      return;
+    }
+
+    const { action, post, user: authorId } = button.dataset;
     const config = actions[action];
     if (!config) return;
 

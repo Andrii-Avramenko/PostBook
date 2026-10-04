@@ -1,8 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { Wrapper } from "./SideBar.styled";
+import { useLogin } from "../LoginContext";
+import LoginButton from "../Buttons/LoginButton";
+import PostButton from "../Buttons/PostButton";
 
-const SideBar = ({ loggedIn }) => {
+const SideBar = ( ) => {
   const navigate = useNavigate();
+  const { loggedIn } = useLogin()
 
   return (
     <Wrapper>
@@ -25,13 +29,9 @@ const SideBar = ({ loggedIn }) => {
         </li>
       </ul>
       {loggedIn ? (
-        <button type="button" onClick={() => navigate("/newpost")}>
-          Make a post
-        </button>
+        <PostButton />
       ) : (
-        <button type="button" onClick={() => navigate("/login")}>
-          Login
-        </button>
+        <LoginButton />
       )}
     </Wrapper>
   );

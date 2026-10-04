@@ -1,11 +1,14 @@
-import { useState } from "react";
-import Post from "../../components/Post/Post";
-import { Posts } from "./Home.styled";
 import PostList from "../../components/PostList/PostList";
+import { Page, Selector, StyledHome } from "./Home.styled";
 
 export const Following = () => {
-  const [feed, setFeed] = useState([]);
   return (
-    <PostList following />
+    <StyledHome>
+      <Selector>
+        <Page to="/">For You</Page>
+        <Page to="/following">Following</Page>
+      </Selector>
+      <PostList following />
+    </StyledHome>
   );
 };

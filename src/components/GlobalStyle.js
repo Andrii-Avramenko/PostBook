@@ -7,7 +7,9 @@ export const GlobalStyle = createGlobalStyle`
 
   body {
     margin: 0;
-    font-family: "Manrope", sans-serif;;
+    font-family: "Manrope", sans-serif;
+    overflow: visible;
+    background-color: ${({theme}) => theme.colors.mainBg};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

@@ -2,38 +2,39 @@ import axios from "axios";
 
 const baseURL = "http://localhost:3001";
 
-export const getFeed = () => {
+const api = axios.create({ baseURL });
+
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  return axios
-    .get(
-      `${baseURL}/posts`,
-      !token
-        ? {}
-        : {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-    )
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export const getFeed = (page = 1) => {
+  return api
+    .get(`/posts`, {
+      params: { page },
+    })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
+    });
+};
+
+export const getFollowing = (before) => {
+  return api
+    .get(`/following`, {
+      params: before ? { before } : {},
+    })
+    .then((res) => res.data)
+    .catch((err) => {
+      throw err;
     });
 };
 
 export const getPostById = (id) => {
-  const token = localStorage.getItem("token");
-  return axios
-    .get(
-      `${baseURL}/posts/${id}`,
-      !token
-        ? {}
-        : {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-    )
+  return api
+    .get(`/posts/${id}`)
     .then((res) => res.data)
     .catch((err) => {
       throw new Error();
@@ -41,8 +42,8 @@ export const getPostById = (id) => {
 };
 
 export const signUp = ({ username, email, password, conpassword }) => {
-  return axios
-    .post(`${baseURL}/register`, {
+  return api
+    .post(`/register`, {
       username,
       email,
       password,
@@ -50,134 +51,99 @@ export const signUp = ({ username, email, password, conpassword }) => {
     })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
 export const logIn = ({ identifier, password }) => {
-  return axios
-    .post(`${baseURL}/login`, {
+  return api
+    .post(`/login`, {
       identifier,
       password,
     })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
 export const checkAcc = () => {
-  return axios
-    .get(`${baseURL}/me`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+  return api
+    .get(`/me`)
     .then((res) => res.data)
     .catch((err) => {
-      if (err.status === 401)
-        console.log(
-          `Bad token! Error ${err.status}, token is going to be cleared!`,
-        );
-      localStorage.removeItem("token");
-      throw new Error(err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+      }
+      throw err;
     });
 };
 
 export const createPost = (content) => {
-  return axios
-    .post(
-      `${baseURL}/posts`,
-      {
-        body: content,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      },
-    )
+  return api
+    .post(`/posts`, {
+      body: content,
+    })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
 export const like = (postId) => {
-  return axios
-    .post(
-      `${baseURL}/like`,
-      { postId },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      },
-    )
+  return api
+    .post(`/like`, { postId })
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
 export const save = (postId) => {
-  console.log("Save: " + postId)
-  // return axios
+  console.log("Save: " + postId);
+  // return api
   //   .post(
-  //     `${baseURL}/save`,
-  //     { postId },
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //       },
-  //     },
+  //     `/save`,
+  //     { postId }
   //   )
   //   .then((res) => res.data)
   //   .catch((err) => {
-  //     throw new Error(err);
+  //     throw err;
   //   });
 };
 
 export const follow = (followeeId) => {
-  return axios
-    .post(
-      `${baseURL}/follow`,
-      { followeeId },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      },
-    )
+  return api
+    .post(`/follow`, { followeeId })
     .then((res) => res.status)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
+export const unfollow = (userId) => {
+  return api
+    .delete(`/follow/${userId}`)
+    .then((res) => res.status)
+    .catch((err) => {
+      throw err;
+    });
+};
 
 export const getUserById = (username) => {
-  return axios
-    .get(`${baseURL}/users/${username}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+  return api
+    .get(`/users/${username}`)
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };
 
 export const getUserPostsById = (username) => {
-  return axios
-    .get(`${baseURL}/users/${username}/posts`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+  return api
+    .get(`/users/${username}/posts`)
     .then((res) => res.data)
     .catch((err) => {
-      throw new Error(err);
+      throw err;
     });
 };

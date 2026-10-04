@@ -120,6 +120,42 @@ export const like = (postId) => {
     });
 };
 
+export const save = (postId) => {
+  console.log("Save: " + postId)
+  // return axios
+  //   .post(
+  //     `${baseURL}/save`,
+  //     { postId },
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     },
+  //   )
+  //   .then((res) => res.data)
+  //   .catch((err) => {
+  //     throw new Error(err);
+  //   });
+};
+
+export const follow = (followeeId) => {
+  return axios
+    .post(
+      `${baseURL}/follow`,
+      { followeeId },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
+    )
+    .then((res) => res.status)
+    .catch((err) => {
+      throw new Error(err);
+    });
+};
+
+
 export const getUserById = (username) => {
   return axios
     .get(`${baseURL}/users/${username}`, {

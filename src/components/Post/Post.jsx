@@ -1,53 +1,56 @@
-import { useState } from "react";
-import { like } from "../../service/api";
 import { Button, Interactions, StyledPost } from "./Post.styled";
 import { FiHeart, FiBookmark } from "react-icons/fi";
 
 const Post = ({ content }) => {
-  const { age_hours, id, body, replies, author, source } = content;
-  const [likes, setLikes] = useState(content.likes);
-  const [liked, setLiked] = useState(content.liked);
-
-  const handleLike = () => {
-    const wasLiked = liked;
-    setLiked(!wasLiked);
-    setLikes((prev) => prev + (wasLiked ? -1 : 1));
-
-    like(id).catch((err) => {
-      console.error(err);
-      setLiked(wasLiked);
-      setLikes((prev) => prev + (wasLiked ? 1 : -1));
-    });
-  };
+  const { age_hours, id, body, author, likes, liked, saved } = content;
+  const { username, followed } = author
 
   const postTime = () => {
-    const age_minutes = age_hours * 60
-    const age_seconds = age_minutes * 60
+    const age_minutes = age_hours * 60;
+    const age_seconds = age_minutes * 60;
+    const age_days = age_hours / 24;
+    const hour_suffix = Math.round(age_hours) % 10 == 1 ? "hour" : "hours";
+    const day_suffix = Math.round(age_days) % 10 == 1 ? "day" : "days";
 
-    if (age_seconds < 60) return `${Math.round(age_seconds)}s`
-    else if (age_minutes < 60) return `${Math.round(age_minutes)}m`
-    else return `${Math.round(age_hours)}h`
-  }
+    if (age_seconds < 60) return `${Math.round(age_seconds)} sec`;
+    else if (age_minutes < 60) return `${Math.round(age_minutes)} min`;
+    else if (age_hours < 24) return `${Math.round(age_hours)} ${hour_suffix}`;
+    else if (age_days < 15) return `${Math.round(age_days)} ${day_suffix}`;
+    else return ``;
+  };
 
   return (
     <StyledPost>
       <div></div>
       <div>
-        <p>@{author.username}</p>
+        <p>@{username}</p>
         <p>{postTime()} ago</p>
-        <button type="button">Follow</button>
+        <button
+          type="button"
+          className={followed ? "followed" : ""}
+          data-action="follow"
+          data-user={author.id}
+        >
+          {followed ? "Following" : "Follow"}
+        </button>
       </div>
       <div>{body}</div>
       <Interactions>
         <Button
           type="button"
-          className={liked ? "liked" : ""}
-          onClick={handleLike}
+          className={liked ? "active" : ""}
+          data-post={id}
+          data-action="like"
         >
           <FiHeart />
           {likes}
         </Button>
-        <Button type="button">
+        <Button
+          type="button"
+          className={saved ? "active" : ""}
+          data-post={id}
+          data-action="save"
+        >
           <FiBookmark />0
         </Button>
       </Interactions>

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import { Wrapper } from "./Layout.styled";
-import SideBar from '../SideBar/SideBar'
+import { Content, Wrapper } from "./Layout.styled";
+import SideBar from "../SideBar/SideBar";
 import { useEffect, useState } from "react";
 import { checkAcc } from "../../service/api";
 
@@ -23,9 +23,7 @@ export const Layout = () => {
       } catch (err) {
         console.error(err);
         setLoggedIn(false);
-      } finally {
-        setIsLoading(false);
-      }
+      } finally {setIsLoading(false)}
     }
     init();
   }, []);
@@ -35,7 +33,9 @@ export const Layout = () => {
   return (
     <Wrapper>
       <SideBar loggedIn={loggedIn} />
-      <Outlet />
+      <Content>
+        <Outlet />
+      </Content>
       <aside>
         <form action="get">
           <input type="text" name="search" id="search" placeholder="Search" />

@@ -133,10 +133,26 @@ app.post("/posts", requireAuth, (req, res) => {
 
 // follow a user
 app.post("/follow", requireAuth, (req, res) => {
-  const { followeeId } = req.body;
+  const followeeId = Number(req.body.followeeId);
+  if (!Number.isInteger(followeeId)) {
+    return res.status(400).json({ error: "followeeId is required" });
+  }
+  if (followeeId === req.user.id) {
+    return res.status(400).json({ error: "You can't follow yourself" });
+  }
+  const exists = db.prepare("SELECT 1 FROM users WHERE id = ?").get(followeeId);
+  if (!exists) return res.status(404).json({ error: "User not found" });
+
   db.prepare(
     "INSERT OR IGNORE INTO follows (follower_id, followee_id) VALUES (?, ?)",
   ).run(req.user.id, followeeId);
+  res.sendStatus(204);
+});
+
+app.delete("/follow/:userId", requireAuth, (req, res) => {
+  db.prepare(
+    "DELETE FROM follows WHERE follower_id = ? AND followee_id = ?",
+  ).run(req.user.id, Number(req.params.userId));
   res.sendStatus(204);
 });
 
@@ -162,11 +178,25 @@ app.post("/like", requireAuth, (req, res) => {
 
 // turns a flat row into { ...post, author: {...} }
 function withAuthor(row) {
-  const { author_id, username, bio, author_created_at, liked, ...post } = row;
+  const {
+    author_id,
+    username,
+    bio,
+    author_created_at,
+    liked,
+    followed,
+    ...post
+  } = row;
   return {
     ...post,
     liked: Boolean(liked),
-    author: { id: author_id, username, bio, joined: author_created_at },
+    author: {
+      id: author_id,
+      username,
+      bio,
+      joined: author_created_at,
+      followed: Boolean(followed),
+    },
   };
 }
 
@@ -180,13 +210,19 @@ app.get("/posts", optionalAuth, (req, res) => {
   const candidates = db
     .prepare(
       `
-    SELECT ${POST_COLUMNS}
-    FROM posts p
-    JOIN users u ON u.id = p.user_id
-    WHERE p.reply_to IS NULL
-    ORDER BY p.id DESC
-    LIMIT 500
-  `,
+  SELECT p.id, p.body, p.created_at,
+    u.id AS author_id, u.username, u.bio, u.created_at AS author_created_at,
+    (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
+    EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?1) AS liked,
+    EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = ?1 AND f.followee_id = u.id) AS followed,
+    (SELECT COUNT(*) FROM posts r WHERE r.reply_to = p.id) AS replies,
+    (julianday('now') - julianday(p.created_at)) * 24 AS age_hours
+  FROM posts p
+  JOIN users u ON u.id = p.user_id
+  WHERE p.reply_to IS NULL
+  ORDER BY p.id DESC
+  LIMIT 500
+`,
     )
     .all(viewerId)
     .map(withAuthor);

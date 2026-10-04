@@ -29,7 +29,7 @@ export const Button = styled.button`
     font-size: 20px;
   }
 
-  &.liked {
+  &.active {
     color: ${({ theme }) => theme.colors.accent};
     svg {
       fill: ${({ theme }) => theme.colors.accent};
